@@ -6,7 +6,7 @@ require 'json'
 
 module Fastlane
   class Bot
-    SLUG = "fastlane/fastlane"
+    SLUG = "home-assistant/home-assistant"
     ISSUE_WARNING = 2
     ISSUE_CLOSED = 0.3 # plus the x months from ISSUE_WARNING
     ISSUE_LOCK = 3 # lock all issues with no activity within the last 3 months
@@ -62,7 +62,8 @@ module Fastlane
         issues_page = has_next_page ? fetch_issues(page) : nil
       end
 
-      notify_action_channel_about(needs_attention_prs)
+      # HASS: don't need right now
+      # notify_action_channel_about(needs_attention_prs)
 
       puts "[SUCCESS] I worked through issues / PRs, much faster than human beings, bots will take over"
     end
@@ -76,6 +77,8 @@ module Fastlane
     def process_open_issue(issue)
       bot_actions = []
       process_inactive(issue)
+
+      return # HASS: we don't have any issue checks for now
 
       return if issue.comments > 0 # there maybe already some bot replys
       bot_actions << process_code_signing(issue)
@@ -91,6 +94,7 @@ module Fastlane
     end
 
     def process_open_pr(pr, needs_attention_prs)
+      return # HASS: Not doing this for now
       days_since_created = (Time.now - pr.created_at) / 60.0 / 60.0 / 24.0
 
       should_have_needs_attention_label = days_since_created > NEEDS_ATTENTION_PR_LIFESPAN_DAYS
@@ -183,7 +187,7 @@ module Fastlane
           # No reply from the user, let's close the issue
           puts "https://github.com/#{SLUG}/issues/#{issue.number} (#{issue.title}) is #{diff_in_months.round(1)} months old, closing now"
           body = []
-          body << "This issue will be auto-closed because there hasn't been any activity for a few months. Feel free to [open a new one](https://github.com/fastlane/fastlane/issues/new) if you still experience this problem 👍"
+          body << "This issue will be auto-closed because there hasn't been any activity for a few months. Feel free to [open a new one](https://github.com/#{SLUG}/issues/new) if you still experience this problem 👍"
           client.add_comment(SLUG, issue.number, body.join("\n\n"))
           client.close_issue(SLUG, issue.number)
           client.add_labels_to_an_issue(SLUG, issue.number, [AUTO_CLOSED])
@@ -199,7 +203,7 @@ module Fastlane
         puts "https://github.com/#{SLUG}/issues/#{issue.number} (#{issue.title}) is #{diff_in_months.round(1)} months old, pinging now"
         body = []
         body << "There hasn't been any activity on this issue recently. Due to the high number of incoming GitHub notifications, we have to clean some of the old issues, as many of them have already been resolved with the latest updates."
-        body << "Please make sure to update to the latest `fastlane` version and check if that solves the issue. Let us know if that works for you by adding a comment :+1:"
+        body << "Please make sure to update to the latest Home Assistant version and check if that solves the issue. Let us know if that works for you by adding a comment :+1:"
 
         client.add_comment(SLUG, issue.number, body.join("\n\n"))
         client.add_labels_to_an_issue(SLUG, issue.number, [AWAITING_REPLY])
